@@ -11,7 +11,7 @@ for row in old:
     for word in lista:
         sheet1.write(j, i, word)
         i+=1
-    j+=1
+    j += 1
 
 wb.save('results.xls')
 old.close()
