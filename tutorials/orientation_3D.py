@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 The pozyx ranging demo (c) Pozyx Labs
 please check out https://www.pozyx.io/Documentation/Tutorials/getting_started/Python
