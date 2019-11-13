@@ -61,12 +61,12 @@ class ReadyToRange(object):
         if status == POZYX_SUCCESS:
             print(device_range)
             t = str(device_range)
-            print("Giulia: ", t)
+            #print("Giulia: ", t)
             t =t.replace("ms", "")
             t= t.replace("mm", "")
             t= t.replace("dBm","")
             t= t.replace(" ", "")
-            print(t)
+            #print(t)
             result_writer = csv.writer(result_file, delimiter=',', quoting=csv.QUOTE_MINIMAL)
             result_writer.writerow([t])
             #result_file.close()
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
 
     # hardcoded way to assign a serial port of the Pozyx
-    serial_port = 'COM10'
+    serial_port = 'COM11'
 
     # # the easier way: or "from pypozyx import *;list_serial_ports()" in terminal cdm
     #serial_port = get_first_pozyx_serial_port()
@@ -112,13 +112,13 @@ if __name__ == "__main__":
         print("No Pozyx connected. Check your USB cable or your driver!")
         quit()
 
-    remote_id = 0x6743 # tag  # the network ID of the remote device
+    remote_id = 0x6744 # tag  # the network ID of the remote device
     remote = True               # whether to use the given remote device for ranging l mio dispositivo
                                 # in porta comunica cin il remot_id per ricevere info di sistanza tra dest_id e remote_id
 
     if not remote:
         remote_id = None
-    destination_id = 0x6854 # network ID of the ranging destination
+    destination_id = 0x6855 # network ID of the ranging destination
     # distance that separates the amount of LEDs lighting up.
     range_step_mm = 1000
 
@@ -130,6 +130,76 @@ if __name__ == "__main__":
                      ranging_protocol, remote_id)
     r.setup()
     i = 0
-    while i<10 :
+    while i<300 :
         r.loop()
         i+=1
+
+
+    # creating xls file
+    print("CONVERTING IN .xlsx ...")
+    from xlwt import Workbook
+    import xlsxwriter
+
+    wb = xlsxwriter.Workbook('results.xlsx')
+    worksheet = wb.add_worksheet()
+    old = open('results.csv', mode='r')  # csv file with results
+
+    worksheet.write('A1', 'ms')
+    worksheet.write('B1', 'mm')
+    worksheet.write('C1', 'dBm')
+
+    j = 1
+    for row in old:
+        row = row.replace('"', '')
+        lista = row.split(",")
+        i = 0
+        for word in lista:
+            worksheet.write(j, i, word)
+            i += 1
+        j += 1
+
+    wb.close()
+    old.close()
+
+
+    print("PLEASE, ENTER THE CALCULATED RANGE or press D to continue with the default one (1810 mm).")
+    resulted_range = input()
+    if resulted_range == 'D':
+        resulted_range = 1810
+
+    # plotting the error
+    print("PLOTTING THE ERROR")
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
+
+    df = pd.read_excel('results.xlsx')
+    range = df['mm'].tolist()
+
+    abs_error_list = []
+    error_list = []
+
+    for element in range:
+        cent = (element - resulted_range) / 10
+        abs_error_list.append(abs(cent))
+        error_list.append(cent)
+
+    step = 200
+    a = min(0.3, min(abs_error_list) )
+    error_list = sorted(error_list)
+    abs_error_list = sorted(abs_error_list)
+    mean= np.mean(error_list)
+
+    fig = plt.figure()
+    plt.hist(abs_error_list, histtype='bar', label='abs values', rwidth=a+0.1,orientation='vertical', alpha=0.5)
+    plt.hist(error_list, histtype='bar', color ='red', label='real values',rwidth=a+0.1, orientation='vertical', alpha=0.5)
+    plt.xlabel('error (cm)')
+    plt.axvline(mean, color='black', linestyle='-.', linewidth=2, label='mean error')
+
+    plt.legend()
+    # plt.xticks(np.arange(min(error_list), max(error_list), step))
+    plt.ylabel('# occurrences')
+    plt.grid(True, which='both')
+    plt.title('error for range '+str(resulted_range/10)+' cm')
+    plt.show()
+    fig.savefig('./error.png')

@@ -1,17 +1,24 @@
 from xlwt import Workbook
-wb = Workbook()
-sheet1 = wb.add_sheet('new1') # add_sheet is used to create sheet.
+import xlsxwriter
+
+wb = xlsxwriter.Workbook('results.xlsx')
+worksheet = wb.add_worksheet()
 old = open('results.csv', mode='r') # csv file with results
 
-j = 0
+
+worksheet.write('A1', 'ms')
+worksheet.write('B1', 'mm')
+worksheet.write('C1', 'dBm')
+
+j = 1
 for row in old:
     row = row.replace('"', '')
     lista = row.split(",")
     i = 0
     for word in lista:
-        sheet1.write(j, i, word)
+        worksheet.write(j, i, word)
         i+=1
-    j += 1
+    j+=1
 
-wb.save('results.xls')
+wb.close()
 old.close()
