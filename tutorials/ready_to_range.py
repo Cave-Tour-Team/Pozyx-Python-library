@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 The Pozyx ready to range tutorial (c) Pozyx Labs
 Please read the tutorial that accompanies this sketch: https://www.pozyx.io/Documentation/Tutorials/ready_to_range/Python
@@ -13,7 +13,25 @@ from pypozyx import (PozyxSerial, PozyxConstants, version,
                      SingleRegister, DeviceRange, POZYX_SUCCESS, POZYX_FAILURE, get_first_pozyx_serial_port)
 
 from pypozyx.tools.version_check import perform_latest_version_check
+import pandas as pd
+import numpy as np
 
+def write_file(filename, data):
+    with open(filename, "w") as f:
+        f.write(data)
+
+class Database(object):
+    def __init__(self):
+        self.data = []
+
+    def up_data(self, vector):
+        vector = np.array(vector)
+        # print("vector", vector)
+        # print(self.data)
+        # print(vector)
+        if vector[0] != None:
+            self.data = np.append(self.data, vector, axis=0)
+        # print("NEW:", self.data)
 
 class ReadyToRange(object):
     """Continuously performs ranging between the Pozyx and a destination and sets their LEDs"""
@@ -62,7 +80,18 @@ class ReadyToRange(object):
         status = self.pozyx.doRanging(
             self.destination_id, device_range, self.remote_id)
         if status == POZYX_SUCCESS:
-            print(device_range)
+            print(str(device_range))
+
+            d = str(device_range)
+            d = d.split(', ')
+            dist = int(d[1].replace(' mm', ''))
+            t = int(d[0].replace(' ms', ''))
+            dbm = int(d[2].replace(' dBm', ''))
+            vector = np.zeros((1,3))
+            vector = np.array(([t, dist, dbm]))
+
+            return vector
+
             if self.ledControl(device_range.distance) == POZYX_FAILURE:
                 print("ERROR: setting (remote) leds")
         else:
@@ -73,6 +102,8 @@ class ReadyToRange(object):
                       self.pozyx.getErrorMessage(error_code))
             else:
                 print("ERROR Ranging, couldn't retrieve local error")
+
+            return ([None, None, None])
 
     def ledControl(self, distance):
         """Sets LEDs according to the distance between two devices"""
@@ -94,7 +125,7 @@ if __name__ == "__main__":
         perform_latest_version_check()
 
     # hardcoded way to assign a serial port of the Pozyx
-    serial_port = 'COM12'
+    serial_port = 'ACM3'
 
     # the easier way
     serial_port = get_first_pozyx_serial_port()
@@ -102,12 +133,12 @@ if __name__ == "__main__":
         print("No Pozyx connected. Check your USB cable or your driver!")
         quit()
 
-    remote_id = 0x605D           # the network ID of the remote device
-    remote = False               # whether to use the given remote device for ranging
+    remote_id = 0x685e           # the network ID of the remote device
+    remote = None               # whether to use the given remote device for ranging
     if not remote:
         remote_id = None
 
-    destination_id = 0x6e66      # network ID of the ranging destination
+    destination_id = 0x685e      # network ID of the ranging destination
     # distance that separates the amount of LEDs lighting up.
     range_step_mm = 1000
 
@@ -118,5 +149,23 @@ if __name__ == "__main__":
     r = ReadyToRange(pozyx, destination_id, range_step_mm,
                      ranging_protocol, remote_id)
     r.setup()
+
+    database = Database()
+    cnt = 0
     while True:
-        r.loop()
+        database.up_data(r.loop())
+
+        cnt = cnt + 1
+        if cnt == 200:
+            break
+
+    # print(database.data)
+    # print("OK")
+    # data_array = database.data
+    data_array = np.array(database.data)
+    l = len(data_array)
+    data_array = np.reshape(data_array, (int(l/3),3))
+    # print(data_array)
+    # write_file("data.csv", database.data)
+    pd.DataFrame(data_array).to_csv("ready_to_range.csv", header=['mm', 'ms', 'dBm'])
+    print("Dataframe saved to csv")
