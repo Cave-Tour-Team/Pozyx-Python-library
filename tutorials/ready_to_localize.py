@@ -1,26 +1,35 @@
 #!/usr/bin/env python3
-"""
-The Pozyx ready to localize tutorial (c) Pozyx Labs
-Please read the tutorial that accompanies this sketch:
-https://www.pozyx.io/Documentation/Tutorials/ready_to_localize/Python
+"""The Pozyx ready to localize tutorial (c) Pozyx Labs.
 
-This tutorial requires at least the contents of the Pozyx Ready to Localize kit. It demonstrates the positioning capabilities
-of the Pozyx device both locally and remotely. Follow the steps to correctly set up your environment in the link, change the
-parameters and upload this sketch. Watch the coordinates change as you move your device around!
+Please read the tutorial that accompanies this sketch:
+https://www.pozyx.io/documentation/creator/python/ready-to-localize
+
+This tutorial requires at least the contents of the Pozyx Ready to Localize
+kit. It demonstrates the positioning capabilities of the Pozyx device both
+locally and remotely. Follow the steps to correctly set up your environment
+in the link, change the parameters and upload this sketch.
+Watch the coordinates change as you move your device around!
 """
 from time import sleep
 
-from pypozyx import (POZYX_POS_ALG_UWB_ONLY, POZYX_3D, Coordinates, POZYX_SUCCESS, PozyxConstants, version,
-                     DeviceCoordinates, PozyxSerial, get_first_pozyx_serial_port, SingleRegister, DeviceList, PozyxRegisters)
+from pypozyx import (POZYX_POS_ALG_UWB_ONLY, POZYX_3D, Coordinates,
+                     POZYX_SUCCESS, PozyxConstants, version, DeviceCoordinates,
+                     PozyxSerial, get_first_pozyx_serial_port, SingleRegister,
+                     DeviceList, PozyxRegisters)
 from pythonosc.udp_client import SimpleUDPClient
 
 from pypozyx.tools.version_check import perform_latest_version_check
 
 
 class ReadyToLocalize(object):
-    """Continuously calls the Pozyx positioning function and prints its position."""
+    """Ready to localize.
 
-    def __init__(self, pozyx, osc_udp_client, anchors, algorithm=POZYX_POS_ALG_UWB_ONLY, dimension=POZYX_3D, height=1000, remote_id=None):
+    Continuously calls the Pozyx positioning function and printsits position.
+    """
+
+    def __init__(self, pozyx, osc_udp_client, anchors,
+                 algorithm=POZYX_POS_ALG_UWB_ONLY, dimension=POZYX_3D,
+                 height=1000, remote_id=None):
         self.pozyx = pozyx
         self.osc_udp_client = osc_udp_client
 
@@ -32,7 +41,7 @@ class ReadyToLocalize(object):
 
     def setup(self):
         """Sets up the Pozyx for positioning by calibrating its anchor list."""
-        print("------------POZYX POSITIONING V{} -------------".format(version))
+        print("-----------POZYX POSITIONING V{} ------------".format(version))
         print("")
         print("- System will manually configure tag")
         print("")
@@ -44,7 +53,7 @@ class ReadyToLocalize(object):
             for device_id in [None, self.remote_id]:
                 self.pozyx.printDeviceInfo(device_id)
         print("")
-        print("------------POZYX POSITIONING V{} -------------".format(version))
+        print("-----------POZYX POSITIONING V{} ------------".format(version))
         print("")
 
         self.setAnchorsManual(save_to_flash=False)
@@ -68,8 +77,10 @@ class ReadyToLocalize(object):
         print("POS ID {}, x(mm): {pos.x} y(mm): {pos.y} z(mm): {pos.z}".format(
             "0x%0.4x" % network_id, pos=position))
         if self.osc_udp_client is not None:
-            self.osc_udp_client.send_message(
-                "/position", [network_id, int(position.x), int(position.y), int(position.z)])
+            self.osc_udp_client.send_message("/position",
+                                             [network_id, int(position.x),
+                                              int(position.y),
+                                              int(position.z)])
 
     def printPublishErrorCode(self, operation):
         """Prints the Pozyx's error and possibly sends it as a OSC packet"""
@@ -77,14 +88,16 @@ class ReadyToLocalize(object):
         network_id = self.remote_id
         if network_id is None:
             self.pozyx.getErrorCode(error_code)
-            print("LOCAL ERROR %s, %s" % (operation, self.pozyx.getErrorMessage(error_code)))
+            print("LOCAL ERROR %s, %s" % (operation,
+                  self.pozyx.getErrorMessage(error_code)))
             if self.osc_udp_client is not None:
                 self.osc_udp_client.send_message("/error", [operation, 0, error_code[0]])
             return
         status = self.pozyx.getErrorCode(error_code, self.remote_id)
         if status == POZYX_SUCCESS:
             print("ERROR %s on ID %s, %s" %
-                  (operation, "0x%0.4x" % network_id, self.pozyx.getErrorMessage(error_code)))
+                  (operation, "0x%0.4x" % network_id,
+                   self.pozyx.getErrorMessage(error_code)))
             if self.osc_udp_client is not None:
                 self.osc_udp_client.send_message(
                     "/error", [operation, network_id, error_code[0]])
@@ -127,11 +140,16 @@ class ReadyToLocalize(object):
 
         for i in range(list_size[0]):
             anchor_coordinates = Coordinates()
-            self.pozyx.getDeviceCoordinates(device_list[i], anchor_coordinates, self.remote_id)
-            print("ANCHOR, 0x%0.4x, %s" % (device_list[i], str(anchor_coordinates)))
+            self.pozyx.getDeviceCoordinates(device_list[i], anchor_coordinates,
+                                            self.remote_id)
+            print("ANCHOR, 0x%0.4x, %s" % (device_list[i],
+                                           str(anchor_coordinates)))
             if self.osc_udp_client is not None:
                 self.osc_udp_client.send_message(
-                    "/anchor", [device_list[i], int(anchor_coordinates.x), int(anchor_coordinates.y), int(anchor_coordinates.z)])
+                    "/anchor", [device_list[i],
+                                int(anchor_coordinates.x),
+                                int(anchor_coordinates.y),
+                                int(anchor_coordinates.z)])
                 sleep(0.025)
 
     def printPublishAnchorConfiguration(self):
@@ -186,7 +204,8 @@ if __name__ == "__main__":
     height = 1000
 
     pozyx = PozyxSerial(serial_port)
-    r = ReadyToLocalize(pozyx, osc_udp_client, anchors, algorithm, dimension, height, remote_id)
+    r = ReadyToLocalize(pozyx, osc_udp_client, anchors, algorithm,
+                        dimension, height, remote_id)
     r.setup()
     while True:
         r.loop()
