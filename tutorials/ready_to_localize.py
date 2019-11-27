@@ -60,17 +60,18 @@ class ReadyToLocalize(object):
         self.printPublishConfigurationResult()
 
     def loop(self):
-        """Performs positioning and displays/exports the results."""
+        """Perform positioning and displays/exports the results."""
         position = Coordinates()
-        status = self.pozyx.doPositioning(
-            position, self.dimension, self.height, self.algorithm, remote_id=self.remote_id)
+        status = self.pozyx.doPositioning(position, self.dimension,
+                                          self.height, self.algorithm,
+                                          remote_id=self.remote_id)
         if status == POZYX_SUCCESS:
             self.printPublishPosition(position)
         else:
             self.printPublishErrorCode("positioning")
 
     def printPublishPosition(self, position):
-        """Prints the Pozyx's position and possibly sends it as a OSC packet"""
+        """Print the Pozyx's position and possibly sends it as a OSC packet"""
         network_id = self.remote_id
         if network_id is None:
             network_id = 0
@@ -83,7 +84,7 @@ class ReadyToLocalize(object):
                                               int(position.z)])
 
     def printPublishErrorCode(self, operation):
-        """Prints the Pozyx's error and possibly sends it as a OSC packet"""
+        """Print the Pozyx's error and possibly sends it as a OSC packet"""
         error_code = SingleRegister()
         network_id = self.remote_id
         if network_id is None:
@@ -91,7 +92,8 @@ class ReadyToLocalize(object):
             print("LOCAL ERROR %s, %s" % (operation,
                   self.pozyx.getErrorMessage(error_code)))
             if self.osc_udp_client is not None:
-                self.osc_udp_client.send_message("/error", [operation, 0, error_code[0]])
+                self.osc_udp_client.send_message("/error", [operation, 0,
+                                                            error_code[0]])
             return
         status = self.pozyx.getErrorCode(error_code, self.remote_id)
         if status == POZYX_SUCCESS:
@@ -158,12 +160,15 @@ class ReadyToLocalize(object):
             print("ANCHOR,0x%0.4x,%s" % (anchor.network_id, str(anchor.coordinates)))
             if self.osc_udp_client is not None:
                 self.osc_udp_client.send_message(
-                    "/anchor", [anchor.network_id, int(anchor.coordinates.x), int(anchor.coordinates.y), int(anchor.coordinates.z)])
+                    "/anchor", [anchor.network_id, int(anchor.coordinates.x),
+                                int(anchor.coordinates.y),
+                                int(anchor.coordinates.z)])
                 sleep(0.025)
 
 
 if __name__ == "__main__":
-    # Check for the latest PyPozyx version. Skip if this takes too long or is not needed by setting to False.
+    # Check for the latest PyPozyx version.
+    # Skip if this takes too long or is not needed by setting to False.
     check_pypozyx_version = True
     if check_pypozyx_version:
         perform_latest_version_check()
@@ -174,15 +179,16 @@ if __name__ == "__main__":
         print("No Pozyx connected. Check your USB cable or your driver!")
         quit()
 
-    remote_id = 0x6e66                 # remote device network ID
+    remote_id = 0x6852                 # remote device network ID
     remote = False                   # whether to use a remote device
     if not remote:
         remote_id = None
 
-    # enable to send position data through OSC
+    # Enable to send position data through OSC
     use_processing = True
 
-    # configure if you want to route OSC to outside your localhost. Networking knowledge is required.
+    # Configure if you want to route OSC to outside your localhost.
+    # Networking knowledge is required.
     ip = "127.0.0.1"
     network_port = 8888
 
@@ -190,15 +196,22 @@ if __name__ == "__main__":
     if use_processing:
         osc_udp_client = SimpleUDPClient(ip, network_port)
 
-    # necessary data for calibration, change the IDs and coordinates yourself according to your measurement
-    anchors = [DeviceCoordinates(0xA001, 1, Coordinates(0, 0, 2790)),
-               DeviceCoordinates(0xA002, 1, Coordinates(10490, 0, 2790)),
-               DeviceCoordinates(0xA003, 1, Coordinates(-405, 6000, 2790)),
-               DeviceCoordinates(0xA004, 1, Coordinates(10490, 6500, 2790))]
+    # Necessary data for calibration, change the IDs and coordinates
+    # yourself according to your measurement.
+    anchors = [DeviceCoordinates(0x6726, 1, Coordinates(2.0077, 5.8589,
+                                                        4.0456)),
+               DeviceCoordinates(0x6119, 1, Coordinates(5.8979, 0.3834,
+                                                        4.1429)),
+               DeviceCoordinates(0x617e, 1, Coordinates(-4.2850, -7.1688,
+                                                        4.3153)),
+               DeviceCoordinates(0x6735, 1, Coordinates(-7.4586, -2.7238,
+                                                        3.9999))]
 
-    # positioning algorithm to use, other is PozyxConstants.POSITIONING_ALGORITHM_TRACKING
+    # Positioning algorithm to use.
+    # Other is PozyxConstants.POSITIONING_ALGORITHM_TRACKING
     algorithm = PozyxConstants.POSITIONING_ALGORITHM_UWB_ONLY
-    # positioning dimension. Others are PozyxConstants.DIMENSION_2D, PozyxConstants.DIMENSION_2_5D
+    # positioning dimension.
+    # Others are PozyxConstants.DIMENSION_2D, PozyxConstants.DIMENSION_2_5D
     dimension = PozyxConstants.DIMENSION_3D
     # height of device, required in 2.5D positioning
     height = 1000
