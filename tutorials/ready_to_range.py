@@ -15,10 +15,15 @@ from pypozyx import (PozyxSerial, PozyxConstants, version,
 from pypozyx.tools.version_check import perform_latest_version_check
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+
+REAL_DISTANCE = 1000  # In mm
+
 
 def write_file(filename, data):
     with open(filename, "w") as f:
         f.write(data)
+
 
 class Database(object):
     def __init__(self):
@@ -32,6 +37,7 @@ class Database(object):
         if vector[0] != None:
             self.data = np.append(self.data, vector, axis=0)
         # print("NEW:", self.data)
+
 
 class ReadyToRange(object):
     """Continuously performs ranging between the Pozyx and a destination and sets their LEDs"""
@@ -84,8 +90,8 @@ class ReadyToRange(object):
 
             d = str(device_range)
             d = d.split(', ')
-            dist = int(d[1].replace(' mm', ''))
             t = int(d[0].replace(' ms', ''))
+            dist = int(d[1].replace(' mm', ''))
             dbm = int(d[2].replace(' dBm', ''))
             vector = np.zeros((1,3))
             vector = np.array(([t, dist, dbm]))
@@ -134,11 +140,11 @@ if __name__ == "__main__":
         quit()
 
     remote_id = 0x685e           # the network ID of the remote device
-    remote = None               # whether to use the given remote device for ranging
+    remote = False               # whether to use the given remote device for ranging
     if not remote:
         remote_id = None
 
-    destination_id = 0x685e      # network ID of the ranging destination
+    destination_id = 0x6842      # network ID of the ranging destination
     # distance that separates the amount of LEDs lighting up.
     range_step_mm = 1000
 
@@ -156,16 +162,31 @@ if __name__ == "__main__":
         database.up_data(r.loop())
 
         cnt = cnt + 1
-        if cnt == 200:
-            break
+        # if cnt == 600:
+            # break
 
     # print(database.data)
     # print("OK")
     # data_array = database.data
+    # print("DATA:\n", database.data)
     data_array = np.array(database.data)
-    l = len(data_array)
-    data_array = np.reshape(data_array, (int(l/3),3))
+    le = len(data_array)
+    data_array = np.reshape(data_array, (int(le/3), 3))
+    my_data = pd.DataFrame(data_array, columns=['ms', 'mm', 'dBm'])
+    errors = my_data['mm'] - REAL_DISTANCE
+    my_data['errors'] = errors
+    print(my_data)
+    plt.figure()
+    plt.hist(my_data['errors'])
+    plt.grid(which='both')
+    # plt.hist(REAL_DISTANCE)
+
+    plt.figure()
+    plt.plot(my_data['dBm'])
+    plt.show()
+
     # print(data_array)
     # write_file("data.csv", database.data)
-    pd.DataFrame(data_array).to_csv("ready_to_range.csv", header=['mm', 'ms', 'dBm'])
-    print("Dataframe saved to csv")
+    # pd.DataFrame(data_array).to_csv("ready_to_range.csv", header=['mm', 'ms', 'dBm'])
+    # print("Dataframe saved to csv")
+    print("--- END ---")
