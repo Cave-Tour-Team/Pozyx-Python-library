@@ -31,13 +31,8 @@ class Database(object):
 
     def up_data(self, vector):
         vector = np.array(vector)
-        # print("vector", vector)
-        # print(self.data)
-        # print(vector)
         if vector[0] != None:
             self.data = np.append(self.data, vector, axis=0)
-        # print("NEW:", self.data)
-
 
 class ReadyToRange(object):
     """Continuously performs ranging between the Pozyx and a destination and sets their LEDs"""
@@ -96,10 +91,11 @@ class ReadyToRange(object):
             vector = np.zeros((1,3))
             vector = np.array(([t, dist, dbm]))
 
-            return vector
-
             if self.ledControl(device_range.distance) == POZYX_FAILURE:
                 print("ERROR: setting (remote) leds")
+
+            return vector
+
         else:
             error_code = SingleRegister()
             status = self.pozyx.getErrorCode(error_code)
@@ -144,7 +140,7 @@ if __name__ == "__main__":
     if not remote:
         remote_id = None
 
-    destination_id = 0x6842      # network ID of the ranging destination
+    destination_id = 0x6743      # network ID of the ranging destination
     # distance that separates the amount of LEDs lighting up.
     range_step_mm = 1000
 
@@ -162,8 +158,8 @@ if __name__ == "__main__":
         database.up_data(r.loop())
 
         cnt = cnt + 1
-        # if cnt == 600:
-            # break
+        if cnt == 100:
+            break
 
     # print(database.data)
     # print("OK")
@@ -177,12 +173,15 @@ if __name__ == "__main__":
     my_data['errors'] = errors
     print(my_data)
     plt.figure()
-    plt.hist(my_data['errors'])
-    plt.grid(which='both')
+    plt.grid(which='major')
+    plt.hist(my_data['errors'], range=[-REAL_DISTANCE, REAL_DISTANCE], ec='k')
+    plt.title('Distance error')
+    plt.xlabel('mm')
+    plt.ylabel('Istances')
     # plt.hist(REAL_DISTANCE)
 
-    plt.figure()
-    plt.plot(my_data['dBm'])
+    # plt.figure()
+    # plt.plot(my_data['mm'])
     plt.show()
 
     # print(data_array)
