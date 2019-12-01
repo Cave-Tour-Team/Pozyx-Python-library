@@ -49,20 +49,35 @@ class DataBase:
             "data": []
         }
 
+    def delete_data(self, channel, bitrate, PRF, PLEN):
+        """Delete entry based on parameters."""
+        cnt = 0
+        for el in self.data["data"]:
+            if ((el["channel"] == channel) and (el["bitrate"] == bitrate) and
+               (el["PRF"] == PRF) and (el["PLEN"] == PLEN)):
+                del self.data["data"][cnt]
+                print("Deleted entry %d!" % cnt)
+                return 1
+            cnt += 1
+        print("No entry deleted!")
+        return -1
+
 
 def main():
     """Run some examples."""
     db = DataBase()
-    db.print_database()
-    db.clear_database()
+    # db.print_database()
+    # db.clear_database()
     mm_list = [np.random.randint(950, 1150) for x in range(100)]
     ms_list = [np.random.randint(100) for x in range(100)]
     dBm_list = [np.random.randint(100) for x in range(100)]
     db.add_data(channel=4, bitrate=210, PRF=0, PLEN=0, real_distance=1000,
                 ms_list=ms_list, mm_list=mm_list, dBm_list=dBm_list)
-    db.print_database()
+    # db.print_database()
+    # db.delete_data(7, 210, 0, 0)
     db.save_data()
 
 
 if __name__ == '__main__':
     main()
+    print("""---END---""")
