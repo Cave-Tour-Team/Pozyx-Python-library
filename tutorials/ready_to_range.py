@@ -29,6 +29,7 @@ PRF = 0
 PLEN = 0
 NOTES = "Collected in DIATI."
 NOW = datetime.datetime.now()
+CNT = 1000
 
 
 def write_file(filename, data):
@@ -182,7 +183,7 @@ if __name__ == "__main__":
         database1.up_data(r.loop())
 
         cnt = cnt + 1
-        if cnt == 100:
+        if cnt == CNT:
             break
 
     # print(database1.data)
@@ -200,6 +201,8 @@ if __name__ == "__main__":
                 new_data['ms'].values,
                 new_data['dBm'].values,
                 NOTES, NOW.isoformat())
+    db.print_database()
+    db.save_data()
 
     errors = new_data['mm'] - REAL_DISTANCE
     new_data['errors'] = errors
