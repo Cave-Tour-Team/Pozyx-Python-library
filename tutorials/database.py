@@ -19,8 +19,8 @@ class DataBase:
         """Print database."""
         print(json.dumps(self.data, indent=2))
 
-    def add_data(self, channel, bitrate, PRF, PLEN, real_distance,
-                 ms_list, mm_list, dBm_list, notes, datetime):
+    def add_data_old(self, channel, bitrate, PRF, PLEN, real_distance,
+                     ms_list, mm_list, dBm_list, notes, datetime):
         """Add data to database."""
         avg_mm = np.mean(mm_list)
         errors = [real_distance - x for x in mm_list]
@@ -40,6 +40,33 @@ class DataBase:
             "total_time": total_time,
             "notes": notes,
             "datetime": datetime
+            }
+        self.data["data"].append(new_data)
+
+    def add_data(self, channel, bitrate, PRF, PLEN, real_distance,
+                 ms_list, mm_list, dBm_list, notes, datetime):
+        """Add data to database."""
+        avg_mm = np.mean(mm_list)
+        errors = [x - real_distance for x in mm_list]
+        measurements = [{
+            "mm": mm,
+            "ms": ms,
+            "dBm": dBm,
+            "mm_err": mm - real_distance
+        } for mm, ms, dBm in zip(mm_list, ms_list, dBm_list)]
+        total_time = max(ms_list) - min(ms_list)
+        new_data = {
+            "channel": channel,
+            "bitrate": bitrate,
+            "PRF": PRF,
+            "PLEN": PLEN,
+            "mm_real": real_distance,
+            "mm_mean": avg_mm,
+            "mm_err_mean": np.mean(errors),
+            "ms_total": total_time,
+            "notes": notes,
+            "datetime": datetime,
+            "measurements": measurements
             }
         self.data["data"].append(new_data)
 
@@ -72,16 +99,17 @@ def main():
     """Run some examples."""
     db = DataBase()
     # db.print_database()
-    db.clear_database()
+    # db.clear_database()
     date = datetime.datetime.now()
     mm_list = [np.random.randint(950, 1150) for x in range(100)]
     ms_list = [x for x in range(100)]
-    dBm_list = [np.random.randint(100) for x in range(100)]
+    dBm_list = [np.random.randint(-83, -78) for x in range(100)]
     db.add_data(channel=4, bitrate=210, PRF=0, PLEN=0, real_distance=1000,
                 ms_list=ms_list, mm_list=mm_list, dBm_list=dBm_list,
                 notes="Fake data.", datetime=date.isoformat())
     # db.print_database()
     # db.delete_data(7, 210, 0, 0)
+    db.clear_database()
     db.save_data()
 
 
