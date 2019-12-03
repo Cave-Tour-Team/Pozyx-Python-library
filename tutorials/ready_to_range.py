@@ -1,44 +1,67 @@
 #!/usr/bin/env python3
-"""
-The Pozyx ready to range tutorial (c) Pozyx Labs
-Please read the tutorial that accompanies this sketch: https://www.pozyx.io/Documentation/Tutorials/ready_to_range/Python
+"""The Pozyx ready to range tutorial (c) Pozyx Labs.
 
-This demo requires two Pozyx devices. It demonstrates the ranging capabilities and the functionality to
-to remotely control a Pozyx device. Move around with the other Pozyx device.
+Please read the tutorial that accompanies this sketch:
+https://www.pozyx.io/Documentation/Tutorials/ready_to_range/Python
 
-This demo measures the range between the two devices. The closer the devices are to each other, the more LEDs will
-light up on both devices.
+This demo requires two Pozyx devices. It demonstrates the ranging capabilities
+and the functionality to remotely control a Pozyx device. Move around with the
+other Pozyx device.
+
+This demo measures the range between the two devices. The closer the devices
+are to each other, the more LEDs will light up on both devices.
 """
 from pypozyx import (PozyxSerial, PozyxConstants, version,
-                     SingleRegister, DeviceRange, POZYX_SUCCESS, POZYX_FAILURE, get_first_pozyx_serial_port)
+                     SingleRegister, DeviceRange, POZYX_SUCCESS, POZYX_FAILURE,
+                     get_first_pozyx_serial_port)
 
 from pypozyx.tools.version_check import perform_latest_version_check
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import database as dbs
+import datetime
 
 REAL_DISTANCE = 1000  # In mm
+CHANNEL = 4
+BITRATE = 110
+PRF = 0
+PLEN = 0
+NOTES = "Collected in DIATI."
+NOW = datetime.datetime.now()
 
 
 def write_file(filename, data):
+    """Write data as a file."""
     with open(filename, "w") as f:
         f.write(data)
 
 
 class Database(object):
+    """Database."""
+
     def __init__(self):
+        """Initialise database."""
         self.data = []
 
     def up_data(self, vector):
+        """Add data to database."""
         vector = np.array(vector)
-        if vector[0] != None:
+        if vector[0] is not None:
             self.data = np.append(self.data, vector, axis=0)
 
-class ReadyToRange(object):
-    """Continuously performs ranging between the Pozyx and a destination and sets their LEDs"""
 
-    def __init__(self, pozyx, destination_id, range_step_mm=1000, protocol=PozyxConstants.RANGE_PROTOCOL_PRECISION,
+class ReadyToRange(object):
+    """Ranging.
+
+    Continuously performs ranging between the Pozyx and a destination and
+    sets their LEDs.
+    """
+
+    def __init__(self, pozyx, destination_id, range_step_mm=1000,
+                 protocol=PozyxConstants.RANGE_PROTOCOL_PRECISION,
                  remote_id=None):
+        """Initialise."""
         self.pozyx = pozyx
         self.destination_id = destination_id
         self.range_step_mm = range_step_mm
@@ -46,7 +69,7 @@ class ReadyToRange(object):
         self.protocol = protocol
 
     def setup(self):
-        """Sets up both the ranging and destination Pozyx's LED configuration"""
+        """Set up both ranging and destination Pozyx's LED configuration."""
         print("------------POZYX RANGING V{} -------------".format(version))
         print("NOTES: ")
         print(" - Change the parameters: ")
@@ -76,7 +99,7 @@ class ReadyToRange(object):
         self.pozyx.setRangingProtocol(self.protocol, self.remote_id)
 
     def loop(self):
-        """Performs ranging and sets the LEDs accordingly"""
+        """Perform ranging and sets the LEDs accordingly."""
         device_range = DeviceRange()
         status = self.pozyx.doRanging(
             self.destination_id, device_range, self.remote_id)
@@ -88,7 +111,7 @@ class ReadyToRange(object):
             t = int(d[0].replace(' ms', ''))
             dist = int(d[1].replace(' mm', ''))
             dbm = int(d[2].replace(' dBm', ''))
-            vector = np.zeros((1,3))
+            vector = np.zeros((1, 3))
             vector = np.array(([t, dist, dbm]))
 
             if self.ledControl(device_range.distance) == POZYX_FAILURE:
@@ -108,7 +131,7 @@ class ReadyToRange(object):
             return ([None, None, None])
 
     def ledControl(self, distance):
-        """Sets LEDs according to the distance between two devices"""
+        """Set LEDs according to the distance between two devices."""
         status = POZYX_SUCCESS
         ids = [self.remote_id, self.destination_id]
         # set the leds of both local/remote and destination pozyx device
@@ -121,7 +144,8 @@ class ReadyToRange(object):
 
 
 if __name__ == "__main__":
-    # Check for the latest PyPozyx version. Skip if this takes too long or is not needed by setting to False.
+    # Check for the latest PyPozyx version. Skip if this takes too long or is
+    # not needed by setting to False.
     check_pypozyx_version = True
     if check_pypozyx_version:
         perform_latest_version_check()
@@ -135,8 +159,8 @@ if __name__ == "__main__":
         print("No Pozyx connected. Check your USB cable or your driver!")
         quit()
 
-    remote_id = 0x685e           # the network ID of the remote device
-    remote = False               # whether to use the given remote device for ranging
+    remote_id = 0x685e    # the network ID of the remote device
+    remote = False      # whether to use the given remote device for ranging
     if not remote:
         remote_id = None
 
@@ -144,7 +168,7 @@ if __name__ == "__main__":
     # distance that separates the amount of LEDs lighting up.
     range_step_mm = 1000
 
-    # the ranging protocol, other one is PozyxConstants.RANGE_PROTOCOL_PRECISION
+    # Ranging protocol, other one is PozyxConstants.RANGE_PROTOCOL_PRECISION
     ranging_protocol = PozyxConstants.RANGE_PROTOCOL_PRECISION
 
     pozyx = PozyxSerial(serial_port)
@@ -152,40 +176,49 @@ if __name__ == "__main__":
                      ranging_protocol, remote_id)
     r.setup()
 
-    database = Database()
+    database1 = Database()
     cnt = 0
     while True:
-        database.up_data(r.loop())
+        database1.up_data(r.loop())
 
         cnt = cnt + 1
         if cnt == 100:
             break
 
-    # print(database.data)
+    # print(database1.data)
     # print("OK")
-    # data_array = database.data
-    # print("DATA:\n", database.data)
-    data_array = np.array(database.data)
+    # data_array = database1.data
+    # print("DATA:\n", database1.data)
+    data_array = np.array(database1.data)
     le = len(data_array)
     data_array = np.reshape(data_array, (int(le/3), 3))
-    my_data = pd.DataFrame(data_array, columns=['ms', 'mm', 'dBm'])
-    errors = my_data['mm'] - REAL_DISTANCE
-    my_data['errors'] = errors
-    print(my_data)
+    new_data = pd.DataFrame(data_array, columns=['ms', 'mm', 'dBm'])
+
+    db = dbs.DataBase()
+    db.add_data(CHANNEL, BITRATE, PRF, PLEN, REAL_DISTANCE,
+                new_data['mm'].values,
+                new_data['ms'].values,
+                new_data['dBm'].values,
+                NOTES, NOW.isoformat())
+
+    errors = new_data['mm'] - REAL_DISTANCE
+    new_data['errors'] = errors
+    print(new_data)
     plt.figure()
     plt.grid(which='major')
-    plt.hist(my_data['errors'], range=[-REAL_DISTANCE, REAL_DISTANCE], ec='k')
+    plt.hist(new_data['errors'], range=[-REAL_DISTANCE, REAL_DISTANCE], ec='k')
     plt.title('Distance error')
     plt.xlabel('mm')
     plt.ylabel('Istances')
     # plt.hist(REAL_DISTANCE)
 
     # plt.figure()
-    # plt.plot(my_data['mm'])
+    # plt.plot(new_data['mm'])
     plt.show()
 
     # print(data_array)
-    # write_file("data.csv", database.data)
-    # pd.DataFrame(data_array).to_csv("ready_to_range.csv", header=['mm', 'ms', 'dBm'])
+    # write_file("data.csv", database1.data)
+    # pd.DataFrame(data_array).to_csv("ready_to_range.csv",
+    #                                 header=['mm', 'ms', 'dBm'])
     # print("Dataframe saved to csv")
     print("--- END ---")
