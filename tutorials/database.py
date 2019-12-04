@@ -12,8 +12,14 @@ class DataBase:
 
     def __init__(self):
         """Open database from file."""
-        with open("tests.json", "r") as f:
-            self.data = json.loads(f.read())
+        try:
+            with open("tests.json", "r") as f:
+                self.data = json.loads(f.read())
+
+        except Exception:
+            with open("tests.json", "w") as f:
+                self.data = {"data": []}
+                json.dump(self.data, f, ensure_ascii=False, indent=2)
 
     def print_database(self):
         """Print database."""
