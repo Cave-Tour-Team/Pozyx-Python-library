@@ -22,14 +22,16 @@ import matplotlib.pyplot as plt
 import database as dbs
 import datetime
 
-REAL_DISTANCE = 1000  # In mm
-CHANNEL = 4
-BITRATE = 110
-PRF = 0
-PLEN = 0
+REAL_DISTANCE = 1500  # In mm
+CHANNEL = 5
+BITRATE = 110  # kbps
+PRF = 64  # Mhz
+PLEN = 1024  # symbols
+GAIN = 11.5  # dB
 NOTES = "Collected in DIATI."
 NOW = datetime.datetime.now()
-CNT = 1000
+CNT = 100
+RANGING_MODE = 'precision'
 
 
 def write_file(filename, data):
@@ -92,12 +94,12 @@ class ReadyToRange(object):
         print("START Ranging: ")
 
         # make sure the local/remote pozyx system has no control over the LEDs.
-        led_config = 0x0
-        self.pozyx.setLedConfig(led_config, self.remote_id)
+        # led_config = 0x0
+        # self.pozyx.setLedConfig(led_config, self.remote_id)
         # do the same for the destination.
-        self.pozyx.setLedConfig(led_config, self.destination_id)
+        # self.pozyx.setLedConfig(led_config, self.destination_id)
         # set the ranging protocol
-        self.pozyx.setRangingProtocol(self.protocol, self.remote_id)
+        # self.pozyx.setRangingProtocol(self.protocol, self.remote_id)
 
     def loop(self):
         """Perform ranging and sets the LEDs accordingly."""
@@ -115,8 +117,8 @@ class ReadyToRange(object):
             vector = np.zeros((1, 3))
             vector = np.array(([t, dist, dbm]))
 
-            if self.ledControl(device_range.distance) == POZYX_FAILURE:
-                print("ERROR: setting (remote) leds")
+            # if self.ledControl(device_range.distance) == POZYX_FAILURE:
+            # print("ERROR: setting (remote) leds")
 
             return vector
 
@@ -160,17 +162,20 @@ if __name__ == "__main__":
         print("No Pozyx connected. Check your USB cable or your driver!")
         quit()
 
-    remote_id = 0x685e    # the network ID of the remote device
-    remote = False      # whether to use the given remote device for ranging
+    remote_id = 0x6854   # the network ID of the remote device
+    remote = True      # whether to use the given remote device for ranging
     if not remote:
         remote_id = None
 
-    destination_id = 0x6743      # network ID of the ranging destination
+    destination_id = 0x6744      # network ID of the ranging destination
     # distance that separates the amount of LEDs lighting up.
     range_step_mm = 1000
 
     # Ranging protocol, other one is PozyxConstants.RANGE_PROTOCOL_PRECISION
-    ranging_protocol = PozyxConstants.RANGE_PROTOCOL_PRECISION
+    if RANGING_MODE == 'precision':
+        ranging_protocol = PozyxConstants.RANGE_PROTOCOL_PRECISION
+    if RANGING_MODE == 'fast':
+        ranging_protocol = PozyxConstants.RANGE_PROTOCOL_FAST
 
     pozyx = PozyxSerial(serial_port)
     r = ReadyToRange(pozyx, destination_id, range_step_mm,
@@ -196,12 +201,12 @@ if __name__ == "__main__":
     new_data = pd.DataFrame(data_array, columns=['ms', 'mm', 'dBm'])
 
     db = dbs.DataBase()
-    db.add_data(CHANNEL, BITRATE, PRF, PLEN, REAL_DISTANCE,
-                new_data['mm'].values,
+    db.add_data(CHANNEL, BITRATE, PRF, PLEN, GAIN, RANGING_MODE, REAL_DISTANCE,
                 new_data['ms'].values,
+                new_data['mm'].values,
                 new_data['dBm'].values,
-                NOTES, NOW.isoformat())
-    db.print_database()
+                NOTES, NOW.isoformat(), CNT)
+    # db.print_database()
     db.save_data()
 
     errors = new_data['mm'] - REAL_DISTANCE
@@ -217,7 +222,7 @@ if __name__ == "__main__":
 
     # plt.figure()
     # plt.plot(new_data['mm'])
-    plt.show()
+    # plt.show()
 
     # print(data_array)
     # write_file("data.csv", database1.data)
