@@ -22,16 +22,18 @@ import matplotlib.pyplot as plt
 import database as dbs
 import datetime
 
-REAL_DISTANCE = 1500  # In mm
-CHANNEL = 5
+REAL_DISTANCE = 3000  # In mm
+CHANNEL = 7
 BITRATE = 110  # kbps
 PRF = 64  # Mhz
 PLEN = 1024  # symbols
 GAIN = 11.5  # dB
-NOTES = "Collected in DIATI."
+NOTES = "Collected in DIATI corridor."
 NOW = datetime.datetime.now()
-CNT = 100
+CNT = 1000
 RANGING_MODE = 'precision'
+HEIGHT = 140  # mm
+DURATION = "01:30"
 
 
 def write_file(filename, data):
@@ -167,7 +169,7 @@ if __name__ == "__main__":
     if not remote:
         remote_id = None
 
-    destination_id = 0x6744      # network ID of the ranging destination
+    destination_id = 0x6743      # network ID of the ranging destination
     # distance that separates the amount of LEDs lighting up.
     range_step_mm = 1000
 
@@ -185,11 +187,14 @@ if __name__ == "__main__":
     database1 = Database()
     cnt = 0
     while True:
-        database1.up_data(r.loop())
-
-        cnt = cnt + 1
-        if cnt == CNT:
+        try:
+            database1.up_data(r.loop())
+            cnt = cnt + 1
+        except (KeyboardInterrupt, SystemExit):
+            print("Stopped.")
             break
+            # if cnt == CNT:
+            # break
 
     # print(database1.data)
     # print("OK")
@@ -205,7 +210,7 @@ if __name__ == "__main__":
                 new_data['ms'].values,
                 new_data['mm'].values,
                 new_data['dBm'].values,
-                NOTES, NOW.isoformat(), CNT)
+                NOTES, NOW.isoformat(), cnt, HEIGHT, DURATION)
     # db.print_database()
     db.save_data()
 
