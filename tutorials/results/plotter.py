@@ -5,7 +5,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-FILENAME = "tests_2.json"
+FILENAME = "C:\\Users\\Francesca\\Documents\\GitHub\\Pozyx-Python-library\\tutorials\\results\\tests_2.json"
 STD_FACTOR = 3
 
 
@@ -40,8 +40,8 @@ class MyData:
     def filter_std(self, factor):
         """Remove measurements outside std range."""
         for item in self.data["data"]:
-            lim_high = item["mm_real"] + factor*item["std"]
-            lim_low = item["mm_real"] - factor*item["std"]
+            lim_high = item["mm_mean"] + factor*item["std"]
+            lim_low = item["mm_mean"] - factor*item["std"]
             item["measurements"] = [m for m in item["measurements"]
                                     if ((lim_low <= m["mm"]) and
                                         (m["mm"] <= lim_high))]
@@ -57,12 +57,11 @@ class MyData:
                     y_list.append(item[field])
                     if item["mm_real"] not in x_distances:
                         x_distances.append(item["mm_real"])
-            # print(y_list)
-            y_list.sort()
             y_list = [y/1000 for y in y_list]
+            y_list = [y for _, y in sorted(zip(x_distances, y_list))]
             x_distances.sort()
             x_distances = [x/1000 for x in x_distances]
-            plt.plot(x_distances, y_list, '--', linewidth=1)
+            plt.plot(x_distances, y_list, 'o', linewidth=1)
         plt.legend(["Channel 1", "Channel 2", "Channel 3", "Channel 4",
                     "Channel 5", "Channel 7"], loc="best")
         plt.xticks(x_distances, labels=x_distances)
