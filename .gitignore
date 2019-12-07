@@ -1,6 +1,7 @@
 # Other
 .DS_Store
 _DS_Store
+backups/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
