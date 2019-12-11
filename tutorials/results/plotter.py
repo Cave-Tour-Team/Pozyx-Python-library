@@ -5,19 +5,22 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-FILENAME = "C:\\Users\\Francesca\\Documents\\GitHub\\Pozyx-Python-library\\tutorials\\results\\tests_2.json"
+FILENAME = "tests_3.json"
 STD_FACTOR = 3
+HOW_MANY = 19
 
 
 class MyData:
     """Database."""
 
-    def __init__(self, filename, std_factor):
+    def __init__(self, filename, std_factor, how_many):
         """Initialise database."""
         self.load_data(filename)
         self.filter_zeros()
+        self.filter_first(how_many)
         self.compute_std()
         self.filter_std(std_factor)
+        self.recompute_mean()
 
     def load_data(self, filename):
         """Load data from file."""
@@ -46,6 +49,22 @@ class MyData:
                                     if ((lim_low <= m["mm"]) and
                                         (m["mm"] <= lim_high))]
 
+    def filter_first(self, how_many):
+        """Filter first values."""
+        for item in self.data["data"]:
+            item["measurements"] = [m for c, m in
+                                    enumerate(item["measurements"])
+                                    if c > how_many]
+
+    def recompute_mean(self):
+        """Update mean distances."""
+        for item in self.data["data"]:
+            item["mm_mean"] = np.mean([m["mm"] for m in item["measurements"]])
+        for item in self.data["data"]:
+            item["mm_error_mean"] = (item["mm_real"] -
+                                     np.mean([m["mm"] for m
+                                             in item["measurements"]]))
+
     def plot_scatter(self, channels, field, title, ylab):
         """Get specific data."""
         plt.figure(figsize=(16, 6))
@@ -61,7 +80,7 @@ class MyData:
             y_list = [y for _, y in sorted(zip(x_distances, y_list))]
             x_distances.sort()
             x_distances = [x/1000 for x in x_distances]
-            plt.plot(x_distances, y_list, 'o', linewidth=1)
+            plt.plot(x_distances, y_list, '.-', linewidth=2)
         plt.legend(["Channel 1", "Channel 2", "Channel 3", "Channel 4",
                     "Channel 5", "Channel 7"], loc="best")
         plt.xticks(x_distances, labels=x_distances)
@@ -75,12 +94,15 @@ class MyData:
         for item in self.data["data"]:
             length = len(item["measurements"])
             std = item["std"]
-            print("STD: %.2f   Num of measurements. %d\n" % (std, length))
+            mean = item["mm_mean"]
+            channel = item["channel"]
+            print("SD: %.2f\tNum of measurements. %d\tMean: %.2f\tChannel: %d"
+                  % (std, length, mean, channel))
 
 
 def main():
     """Plot different kinds of data."""
-    md = MyData(FILENAME, STD_FACTOR)
+    md = MyData(FILENAME, STD_FACTOR, HOW_MANY)
     md.print_info()
     md.plot_scatter(channels=[1, 2, 3, 4, 5, 7], field="mm_mean",
                     title="Mean distance", ylab="Measured distance [m]")
