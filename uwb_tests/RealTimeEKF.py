@@ -250,7 +250,7 @@ if __name__ == "__main__":
     # shortcut to not have to find out the port yourself
     serial_port = get_serial_ports()[0].device
 
-    remote_id = 0x685e                # remote device network ID
+    remote_id = 0x6743                # remote device network ID
     remote = True             # whether to use a remote device
     if not remote:
         remote_id = True
@@ -266,12 +266,22 @@ if __name__ == "__main__":
     if use_processing:
         osc_udp_client = SimpleUDPClient(ip, network_port)
     # necessary data for calibration, change the IDs and coordinates yourself
-    anchors = [DeviceCoordinates(0x617e, 1, Coordinates(0, 0, 1180)),
-               DeviceCoordinates(0x686a, 1, Coordinates(1815, 0, 1180)),
-               DeviceCoordinates(0x6119, 1, Coordinates(1800, 6800, 1180)),
-               DeviceCoordinates(0x617c, 1, Coordinates(0, 6800, 1180)),
-               DeviceCoordinates(0x616c, 1, Coordinates(0, 2920, 2550)),
-               DeviceCoordinates(0x611e, 1, Coordinates(1800, 3945, 2915))
+    anchors = [DeviceCoordinates(0x617e, 1, Coordinates(394541.63780, 4990886.425448, 306.11862)),
+               DeviceCoordinates(0x6119, 1, Coordinates(394535.87380, 4990875.13956, 305.94624)),
+               DeviceCoordinates(0x6735, 1, Coordinates(394546.46551, 4990883.86831, 305.78802)),
+               DeviceCoordinates(0x6726, 1, Coordinates(394541.79053, 4990871.96470, 305.84900)),
+
+               # DeviceCoordinates(0x672d, 1, Coordinates()),
+               # DeviceCoordinates(0x686a, 1, Coordinates()),
+               # DeviceCoordinates(0x6765, 1, Coordinates()),
+               # DeviceCoordinates(0x616c, 1, Coordinates()),
+
+               # P9
+               DeviceCoordinates(0x6840, 1, Coordinates(394554.71364, 4990875.21233, 303.81908)),
+
+               # P 10
+               DeviceCoordinates(0x617c, 1, Coordinates(3994551.31736, 4990868.81968, 303.80426))
+
                ]
 
     algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
