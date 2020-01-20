@@ -3,14 +3,14 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-FILENAME = 'Pos_12-54-2020.01.20.csv'
+FILENAME = 'Pos_17-53-2020.01.20.csv'
 
 
 def plot_path(df):
     """Plot X vs Y with anchor labels."""
     fig, ax = plt.subplots()
     print(df.describe())
-    ax.scatter(df["posX[mm]"], df["posY[mm]"], marker='.')
+    ax.plot(df["posX[mm]"], df["posY[mm]"], marker='.')
     plt.xlabel('X (mm)')
     plt.ylabel('Y (mm)')
     false_x = 394500
@@ -21,17 +21,22 @@ def plot_path(df):
                  int((394546.46551-false_x)*1000),
                  int((394541.79053-false_x)*1000),
                  int((394554.71364-false_x)*1000),
-                 int((394551.31736-false_x)*1000)]
+                 int((394551.31736-false_x)*1000),
+                 int((394556.25337-false_x)*1000),
+                 int((394550.46295-false_x)*1000)]
 
     y_anchors = [int((4990886.425448-false_y)*1000),
                  int((4990875.13956-false_y)*1000),
                  int((4990883.86831-false_y)*1000),
                  int((4990871.96470-false_y)*1000),
                  int((4990875.21233-false_y)*1000),
-                 int((4990868.81968-false_y)*1000)]
+                 int((4990868.81968-false_y)*1000),
+                 int((4990879.49682-false_y)*1000),
+                 int((4990881.68270-false_y)*1000)]
 
     labels_anchors = [' 0x617e', ' 0x6119', ' 0x6735', ' 0x6726',
-                      ' 0x6726 (P9)', ' 0x6726 (P10)']
+                      ' 0x6840 (P9)', ' 0x617c (P10)',
+                      ' 0x672d (P8)', ' 0x6765 (P5)']
 
     # Print anchor positions
     ax.scatter(x_anchors, y_anchors, marker="s", color='red')
