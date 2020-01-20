@@ -62,23 +62,25 @@ class PosRangeOrientation(object):
         self.current_time = time()
 
     def loop(self):
-        """Gets new IMU sensor data"""
+        """Get new IMU sensor data."""
         sensor_data = SensorData()
         calibration_status = SingleRegister()
         """Performs positioning and displays/exports the results."""
         position = Coordinates()
         RanData = self.Ranging()
-        status = self.pozyx.doPositioning(
-            position, self.dimension, self.height, self.algorithm, remote_id=self.remote_id)
+        status = self.pozyx.doPositioning(position, self.dimension,
+                                          self.height, self.algorithm,
+                                          remote_id=self.remote_id)
 
-        if self.remote_id is not None or self.pozyx.checkForFlag(POZYX_INT_MASK_IMU, 0.01) == POZYX_SUCCESS:
+        if (self.remote_id is not None) or (self.pozyx.checkForFlag(POZYX_INT_MASK_IMU, 0.01) == POZYX_SUCCESS):
             status = self.pozyx.getAllSensorData(sensor_data, self.remote_id)
             status &= self.pozyx.getCalibrationStatus(calibration_status, self.remote_id)
 
         if status == POZYX_SUCCESS:
             self.publishSensorData(sensor_data, calibration_status)
-            status = self.pozyx.doPositioning(
-            position, self.dimension, self.height, self.algorithm, remote_id=self.remote_id)
+            status = self.pozyx.doPositioning(position, self.dimension,
+                                              self.height, self.algorithm,
+                                              remote_id=self.remote_id)
         if status == POZYX_SUCCESS:
             RanPosIMUData = self.printPosRanIMUData(position, RanData,
                                                     sensor_data)
@@ -87,7 +89,7 @@ class PosRangeOrientation(object):
             self.printPublishErrorCode("positioning")
 
     def Ranging(self):
-        """Performs ranging"""
+        """Perform ranging."""
         RanData = []
         for index in range(len(devices)):
             device_range = DeviceRange()
@@ -112,7 +114,7 @@ class PosRangeOrientation(object):
         self.addCalibrationStatus(calibration_status)
 
     def printPosRanIMUData(self, position, RanData, sensor_data):
-        """Prints the Pozyx's position and possibly sends it as a OSC packet"""
+        """Print the Pozyx's position and possibly send it as a OSC packet."""
         network_id = self.remote_id
         RanPosData = []
         pos = position
@@ -122,6 +124,7 @@ class PosRangeOrientation(object):
         P = sensor_data.pressure
         Temp = sensor_data.temperature
         gyro = sensor_data.angular_vel
+        
         if network_id is None:
             network_id = 0
         print("POS ID {}, x(mm): {pos.x} y(mm): {pos.y} z(mm): {pos.z}".format(
@@ -172,6 +175,7 @@ class PosRangeOrientation(object):
     def addSensorData(self, sensor_data):
         """Adds the sensor data to the OSC message"""
         # self.msg_builder.add_arg(sensor_data.pressure)
+        print("---", sensor_data.pressure)
         self.addComponentsOSC(sensor_data.acceleration)
         self.addComponentsOSC(sensor_data.magnetic)
         self.addComponentsOSC(sensor_data.angular_vel)
@@ -179,6 +183,7 @@ class PosRangeOrientation(object):
         self.addComponentsOSC(sensor_data.quaternion)
         self.addComponentsOSC(sensor_data.linear_acceleration)
         self.addComponentsOSC(sensor_data.gravity_vector)
+        # self.addComponentsOSC(sensor_data.pressure)
 
     def addComponentsOSC(self, component):
         """Adds a sensor data component to the OSC message"""
@@ -269,7 +274,7 @@ if __name__ == "__main__":
     anchors = [DeviceCoordinates(0x617e, 1, Coordinates(394541.63780, 4990886.425448, 306.11862)),
                DeviceCoordinates(0x6119, 1, Coordinates(394535.87380, 4990875.13956, 305.94624)),
                DeviceCoordinates(0x6735, 1, Coordinates(394546.46551, 4990883.86831, 305.78802)),
-               DeviceCoordinates(0x6726, 1, Coordinates(394541.79053, 4990871.96470, 305.84900)),
+               DeviceCoordinates(0x6726, 1, Coordinates(394541.79053, 4990871.96470, 305.84900))  #,
 
                # DeviceCoordinates(0x672d, 1, Coordinates()),
                # DeviceCoordinates(0x686a, 1, Coordinates()),
@@ -277,10 +282,10 @@ if __name__ == "__main__":
                # DeviceCoordinates(0x616c, 1, Coordinates()),
 
                # P9
-               DeviceCoordinates(0x6840, 1, Coordinates(394554.71364, 4990875.21233, 303.81908)),
+               # DeviceCoordinates(0x6840, 1, Coordinates(394554.71364, 4990875.21233, 303.81908)),
 
                # P 10
-               DeviceCoordinates(0x617c, 1, Coordinates(3994551.31736, 4990868.81968, 303.80426))
+               # DeviceCoordinates(0x617c, 1, Coordinates(3994551.31736, 4990868.81968, 303.80426))
 
                ]
 
