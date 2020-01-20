@@ -63,10 +63,12 @@ class PosRangeOrientation(object):
 
     def loop(self):
         """Get new IMU sensor data."""
+
         sensor_data = SensorData()
         calibration_status = SingleRegister()
         """Performs positioning and displays/exports the results."""
-        position = Coordinates()
+        position = Coordinates()  # Initialize variable
+        init_time = time()
         RanData = self.Ranging()
         status = self.pozyx.doPositioning(position, self.dimension,
                                           self.height, self.algorithm,
@@ -81,12 +83,15 @@ class PosRangeOrientation(object):
             status = self.pozyx.doPositioning(position, self.dimension,
                                               self.height, self.algorithm,
                                               remote_id=self.remote_id)
+            print(time() - init_time)
         if status == POZYX_SUCCESS:
             RanPosIMUData = self.printPosRanIMUData(position, RanData,
                                                     sensor_data)
             return RanPosIMUData
         else:
             self.printPublishErrorCode("positioning")
+
+
 
     def Ranging(self):
         """Perform ranging."""
@@ -175,7 +180,7 @@ class PosRangeOrientation(object):
     def addSensorData(self, sensor_data):
         """Adds the sensor data to the OSC message"""
         # self.msg_builder.add_arg(sensor_data.pressure)
-        print("---", sensor_data.pressure)
+        # print("---", sensor_data.pressure)
         self.addComponentsOSC(sensor_data.acceleration)
         self.addComponentsOSC(sensor_data.magnetic)
         self.addComponentsOSC(sensor_data.angular_vel)
@@ -255,10 +260,10 @@ if __name__ == "__main__":
     # shortcut to not have to find out the port yourself
     serial_port = get_serial_ports()[0].device
 
-    remote_id = 0x6743                # remote device network ID
+    remote_id = 0x6741                # remote device network ID
     remote = True             # whether to use a remote device
     if not remote:
-        remote_id = True
+        remote_id = None
 
     print()
     use_processing = False          # enable to send position data through OSC
@@ -274,10 +279,10 @@ if __name__ == "__main__":
     false_x = 394500
     false_y = 4990800
     false_z = 300
-    anchors = [DeviceCoordinates(0x617e, 1, Coordinates(int((394541.63780-false_x)*1000), int((4990886.425448-false_y)*1000), int((306.11862-false_z)*1000)),
-               DeviceCoordinates(0x6119, 1, Coordinates(int((394535.87380-false_x)*1000), int((4990875.13956-false_y)*1000), int((305.94624-false_z)*1000)),
-               DeviceCoordinates(0x6735, 1, Coordinates(int((394546.46551-false_x)*1000), int((4990883.86831-false_y)*1000), int((305.78802-false_z)*1000)),
-               DeviceCoordinates(0x6726, 1, Coordinates(int((394541.79053-false_x)*1000), int((4990871.96470-false_y)*1000), int((305.84900-false_z)*1000))  #,
+    anchors = [DeviceCoordinates(0x617e, 1, Coordinates(int((394541.63780-false_x)*1000), int((4990886.425448-false_y)*1000), int((306.11862-false_z)*1000))),
+               DeviceCoordinates(0x6119, 1, Coordinates(int((394535.87380-false_x)*1000), int((4990875.13956-false_y)*1000), int((305.94624-false_z)*1000))),
+               DeviceCoordinates(0x6735, 1, Coordinates(int((394546.46551-false_x)*1000), int((4990883.86831-false_y)*1000), int((305.78802-false_z)*1000))),
+               DeviceCoordinates(0x6726, 1, Coordinates(int((394541.79053-false_x)*1000), int((4990871.96470-false_y)*1000), int((305.84900-false_z)*1000))),
 
                # DeviceCoordinates(0x672d, 1, Coordinates()),
                # DeviceCoordinates(0x686a, 1, Coordinates()),
@@ -285,10 +290,10 @@ if __name__ == "__main__":
                # DeviceCoordinates(0x616c, 1, Coordinates()),
 
                # P9
-               # DeviceCoordinates(0x6840, 1, Coordinates(int((394554.71364-false_x)*1000), int((4990875.21233-false_y)*1000), int((303.81908-false_z)*1000)),
+               DeviceCoordinates(0x6840, 1, Coordinates(int((394554.71364-false_x)*1000), int((4990875.21233-false_y)*1000), int((303.81908-false_z)*1000))),
 
                # P 10
-               # DeviceCoordinates(0x617c, 1, Coordinates(int((3994551.31736-false_x)*1000), int((4990868.81968-false_y)*1000), int((303.80426-false_z)*1000))
+               DeviceCoordinates(0x617c, 1, Coordinates(int((394551.31736-false_x)*1000), int((4990868.81968-false_y)*1000), int((303.80426-false_z)*1000)))
 
                ]
 
@@ -321,8 +326,11 @@ if __name__ == "__main__":
         writer.writerow(" ")
         writer.writerow(header)
         while True:
-            Sen = r.loop()
-            if Sen is not None:
-                writer.writerow(Sen)
-            else:
-                pass
+            try:
+                Sen = r.loop()
+                if Sen is not None:
+                    writer.writerow(Sen)
+                else:
+                    pass
+            except KeyboardInterrupt:
+                break
