@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""
+"""RealTimeEKF.
+
 The Pozyx ready to localize tutorial (c) Pozyx Labs
 Please read the tutorial that accompanies this sketch:
 https://www.pozyx.io/Documentation/Tutorials/ready_to_localize/Python
@@ -49,7 +50,7 @@ class PosRangeOrientation(object):
         self.osc_udp_client = osc_udp_client
 
     def setup(self):
-        """Sets up the Pozyx for positioning by calibrating its anchor list."""
+        """Set up the Pozyx for positioning by calibrating its anchor list."""
         print("------------POZYX POSITIONING V1.0 --------------")
         print()
         print("START Ranging: ")
@@ -62,11 +63,13 @@ class PosRangeOrientation(object):
         self.current_time = time()
 
     def loop(self):
-        """Get new IMU sensor data."""
+        """Get new IMU sensor data.
 
+        Perform positioning and displays/exports the results.
+        """
         sensor_data = SensorData()
         calibration_status = SingleRegister()
-        """Performs positioning and displays/exports the results."""
+
         position = Coordinates()  # Initialize variable
         init_time = time()
         RanData = self.Ranging()
@@ -88,13 +91,12 @@ class PosRangeOrientation(object):
 
         if status == POZYX_SUCCESS:
             RanPosIMUData = self.printPosRanIMUData(position, RanData,
-                                                    sensor_data, round(acq_time, 6),
+                                                    sensor_data,
+                                                    round(acq_time, 6),
                                                     round(timestamp, 6))
             return RanPosIMUData
         else:
             self.printPublishErrorCode("positioning")
-
-
 
     def Ranging(self):
         """Perform ranging."""
@@ -114,17 +116,18 @@ class PosRangeOrientation(object):
         return RanData
 
     def publishSensorData(self, sensor_data, calibration_status):
-        """Makes the OSC sensor data package and publishes it"""
+        """Make the OSC sensor data package and publishes it."""
         self.msg_builder = OscMessageBuilder("/sensordata")
         self.msg_builder.add_arg(int(1000 * (time() - self.current_time)))
-        current_time = time()
+        # current_time = time()
         self.addSensorData(sensor_data)
         self.addCalibrationStatus(calibration_status)
 
-    def printPosRanIMUData(self, position, RanData, sensor_data, acq_time, timestamp):
+    def printPosRanIMUData(self, position, RanData, sensor_data,
+                           acq_time, timestamp):
         """Print the Pozyx's position and possibly send it as a OSC packet."""
         network_id = self.remote_id
-        RanPosData = []
+        # RanPosData = []
         pos = position
         acc = sensor_data.acceleration
         MF = sensor_data.magnetic
@@ -147,15 +150,13 @@ class PosRangeOrientation(object):
         PosData = [pos.x, pos.y, pos.z]
         SenData = [acc.x/1000, acc.y/1000, acc.z/1000,
                    gyro.x, gyro.y, gyro.z,
-                   MF.x/100, MF.y/100, MF.z/100,
-                   # P,
-                   EA.roll, EA.pitch, EA.heading]
-                   # Temp]
+                   MF.x/100, MF.y/100, MF.z/100,  # P,
+                   EA.roll, EA.pitch, EA.heading]  # Temp]
         RanPosIMUData = TimeData + PosData + RanData + SenData
         return RanPosIMUData
 
     def printPublishErrorCode(self, operation):
-        """Prints the Pozyx's error and possibly sends it as a OSC packet"""
+        """Print the Pozyx's error and possibly sends it as a OSC packet."""
         error_code = SingleRegister()
         network_id = self.remote_id
         if network_id is None:
@@ -182,35 +183,31 @@ class PosRangeOrientation(object):
             # should only happen when not being able to communicate with a remote Pozyx.
 
     def addSensorData(self, sensor_data):
-        """Adds the sensor data to the OSC message"""
+        """Add the sensor data to the OSC message."""
         # self.msg_builder.add_arg(sensor_data.pressure)
-
-
         self.addComponentsOSC(sensor_data.acceleration)
         self.addComponentsOSC(sensor_data.magnetic)
         self.addComponentsOSC(sensor_data.angular_vel)
         self.addComponentsOSC(sensor_data.euler_angles)
-
         # self.addComponentsOSC(sensor_data.quaternion)
-
         self.addComponentsOSC(sensor_data.linear_acceleration)
         self.addComponentsOSC(sensor_data.gravity_vector)
         # self.addComponentsOSC(sensor_data.pressure)
 
     def addComponentsOSC(self, component):
-        """Adds a sensor data component to the OSC message"""
+        """Add a sensor data component to the OSC message."""
         for data in component.data:
             self.msg_builder.add_arg(float(data))
 
     def addCalibrationStatus(self, calibration_status):
-        """Adds the calibration status data to the OSC message"""
+        """Add the calibration status data to the OSC message."""
         self.msg_builder.add_arg(calibration_status[0] & 0x03)
         self.msg_builder.add_arg((calibration_status[0] & 0x0C) >> 2)
         self.msg_builder.add_arg((calibration_status[0] & 0x30) >> 4)
         self.msg_builder.add_arg((calibration_status[0] & 0xC0) >> 6)
 
     def setAnchorsManual(self):
-        """Adds the manually measured anchors to the Pozyx's device list one for one."""
+        """Add manually measured anchors to Pozyx's device list one for one."""
         status = self.pozyx.clearDevices(self.remote_id)
         for anchor in self.anchors:
             status &= self.pozyx.addDevice(anchor, self.remote_id)
@@ -220,7 +217,7 @@ class PosRangeOrientation(object):
         return status
 
     def printPublishConfigurationResult(self):
-        """Prints and potentially publishes the anchor configuration result in a human-readable way."""
+        """Print and potentially publishes the anchor configuration result in a human-readable way."""
         list_size = SingleRegister()
 
         status = self.pozyx.getDeviceListSize(list_size, self.remote_id)
@@ -272,7 +269,6 @@ if __name__ == "__main__":
     if not remote:
         remote_id = None
 
-    print()
     use_processing = False          # enable to send position data through OSC
     ip = "127.0.0.1"                # IP for the OSC UDP
     network_port = 8888             # network port for the OSC UDP
@@ -291,9 +287,9 @@ if __name__ == "__main__":
                DeviceCoordinates(0x6735, 1, Coordinates(int((394546.46551-false_x)*1000), int((4990883.86831-false_y)*1000), int((305.78802-false_z)*1000))),
                DeviceCoordinates(0x6726, 1, Coordinates(int((394541.79053-false_x)*1000), int((4990871.96470-false_y)*1000), int((305.84900-false_z)*1000))),
 
-               # DeviceCoordinates(0x672d, 1, Coordinates()),
+               DeviceCoordinates(0x672d, 1, Coordinates(int((394556.25337-false_x)*1000), int((4990879.49682-false_y)*1000), int((305.55437-false_z)*1000))),
                # DeviceCoordinates(0x686a, 1, Coordinates()),
-               # DeviceCoordinates(0x6765, 1, Coordinates()),
+               DeviceCoordinates(0x6765, 1, Coordinates(int((394550.46295-false_x)*1000), int((4990881.68270-false_y)*1000), int((305.86959-false_z)*1000))),
                # DeviceCoordinates(0x616c, 1, Coordinates()),
 
                # P9
@@ -318,12 +314,19 @@ if __name__ == "__main__":
         Start_Time = ['Start Time of session :',
                       dt.strftime("%H-%M-%S. %f - %Y.%m.%d")]
 
-        header = ['Timestamp', 'DT', 'posX[mm]', 'posY[mm]', 'posZ[mm]', 'RangeA[mm]',
-                  'PowerA[dbm]', 'RangeB[mm]', 'PowerB[dbm]', 'RangeC[mm]',
-                  'PowerC[dbm]', 'RangeD[mm]', 'PowerD[dbm]', 'RangeE[mm]',
-                  'PowerE[dbm]', 'RangeF[mm]', 'PowerF[dbm]', 'AccX[g]',
-                  'AccY[g]', 'AccZ[g]', 'GyroX[deg/sec]', 'GyroY[deg/sec]',
-                  'GyroZ[deg/sec]', 'MagX[G]', 'MagY[G]', 'MagZ[G]',
+        header = ['Timestamp', 'DT',
+                  'posX[mm]', 'posY[mm]', 'posZ[mm]',
+                  'RangeA[mm]', 'PowerA[dbm]',
+                  'RangeB[mm]', 'PowerB[dbm]',
+                  'RangeC[mm]', 'PowerC[dbm]',
+                  'RangeD[mm]', 'PowerD[dbm]',
+                  'RangeE[mm]', 'PowerE[dbm]',
+                  'RangeF[mm]', 'PowerF[dbm]',
+                  'RangeG[mm]', 'PowerG[dbm]',
+                  'RangeH[mm]', 'PowerH[dbm]',
+                  'AccX[g]', 'AccY[g]', 'AccZ[g]',
+                  'GyroX[deg/sec]', 'GyroY[deg/sec]', 'GyroZ[deg/sec]',
+                  'MagX[G]', 'MagY[G]', 'MagZ[G]',
                   'Roll', 'Pitch', 'Heading']
 
         writer.writerow(Start_Time)
@@ -332,9 +335,7 @@ if __name__ == "__main__":
         while True:
             try:
                 Sen = r.loop()
-                print(Sen)
                 if Sen is not None:
-                    # pass
                     writer.writerow(Sen)
                 else:
                     pass
