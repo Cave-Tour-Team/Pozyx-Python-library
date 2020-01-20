@@ -1,0 +1,7 @@
+Alg: Tracking
+Ranging protocol: Precision
+Ch: 4
+Bitrate: 850 (1)
+PRF: 2
+PLEN: 1024 (0x08)
+gain_db: 11.5
