@@ -83,10 +83,13 @@ class PosRangeOrientation(object):
             status = self.pozyx.doPositioning(position, self.dimension,
                                               self.height, self.algorithm,
                                               remote_id=self.remote_id)
-            print(time() - init_time)
+            timestamp = time()
+            acq_time = timestamp - init_time
+
         if status == POZYX_SUCCESS:
             RanPosIMUData = self.printPosRanIMUData(position, RanData,
-                                                    sensor_data)
+                                                    sensor_data, round(acq_time, 6),
+                                                    round(timestamp, 6))
             return RanPosIMUData
         else:
             self.printPublishErrorCode("positioning")
@@ -118,7 +121,7 @@ class PosRangeOrientation(object):
         self.addSensorData(sensor_data)
         self.addCalibrationStatus(calibration_status)
 
-    def printPosRanIMUData(self, position, RanData, sensor_data):
+    def printPosRanIMUData(self, position, RanData, sensor_data, acq_time, timestamp):
         """Print the Pozyx's position and possibly send it as a OSC packet."""
         network_id = self.remote_id
         RanPosData = []
@@ -126,8 +129,8 @@ class PosRangeOrientation(object):
         acc = sensor_data.acceleration
         MF = sensor_data.magnetic
         EA = sensor_data.euler_angles
-        P = sensor_data.pressure
-        Temp = sensor_data.temperature
+        # P = sensor_data.pressure
+        # Temp = sensor_data.temperature
         gyro = sensor_data.angular_vel
 
         if network_id is None:
@@ -140,14 +143,15 @@ class PosRangeOrientation(object):
                                                            int(position.y),
                                                            int(position.z)])
         global PosData
+        TimeData = [timestamp, acq_time]
         PosData = [pos.x, pos.y, pos.z]
         SenData = [acc.x/1000, acc.y/1000, acc.z/1000,
                    gyro.x, gyro.y, gyro.z,
                    MF.x/100, MF.y/100, MF.z/100,
-                   P,
-                   EA.roll, EA.pitch, EA.heading,
-                   Temp]
-        RanPosIMUData = PosData + RanData + SenData
+                   # P,
+                   EA.roll, EA.pitch, EA.heading]
+                   # Temp]
+        RanPosIMUData = TimeData + PosData + RanData + SenData
         return RanPosIMUData
 
     def printPublishErrorCode(self, operation):
@@ -180,12 +184,15 @@ class PosRangeOrientation(object):
     def addSensorData(self, sensor_data):
         """Adds the sensor data to the OSC message"""
         # self.msg_builder.add_arg(sensor_data.pressure)
-        # print("---", sensor_data.pressure)
+
+
         self.addComponentsOSC(sensor_data.acceleration)
         self.addComponentsOSC(sensor_data.magnetic)
         self.addComponentsOSC(sensor_data.angular_vel)
         self.addComponentsOSC(sensor_data.euler_angles)
-        self.addComponentsOSC(sensor_data.quaternion)
+
+        # self.addComponentsOSC(sensor_data.quaternion)
+
         self.addComponentsOSC(sensor_data.linear_acceleration)
         self.addComponentsOSC(sensor_data.gravity_vector)
         # self.addComponentsOSC(sensor_data.pressure)
@@ -293,12 +300,10 @@ if __name__ == "__main__":
                DeviceCoordinates(0x6840, 1, Coordinates(int((394554.71364-false_x)*1000), int((4990875.21233-false_y)*1000), int((303.81908-false_z)*1000))),
 
                # P 10
-               DeviceCoordinates(0x617c, 1, Coordinates(int((394551.31736-false_x)*1000), int((4990868.81968-false_y)*1000), int((303.80426-false_z)*1000)))
+               DeviceCoordinates(0x617c, 1, Coordinates(int((394551.31736-false_x)*1000), int((4990868.81968-false_y)*1000), int((303.80426-false_z)*1000)))]
 
-               ]
-
-    algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
-# algorithm = POZYX_POS_ALG_TRACKING  # positioning algorithm to use IMU + UWB
+    # algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
+    algorithm = POZYX_POS_ALG_TRACKING  # positioning algorithm to use IMU + UWB
 
     dimension = POZYX_3D                # positioning dimension
     height = 1000            # height of device, required in 2.5D positioning
@@ -313,14 +318,13 @@ if __name__ == "__main__":
         Start_Time = ['Start Time of session :',
                       dt.strftime("%H-%M-%S. %f - %Y.%m.%d")]
 
-        header = ['posX[mm]', 'posY[mm]', 'posZ[mm]', 'RangeA[mm]',
+        header = ['Timestamp', 'DT', 'posX[mm]', 'posY[mm]', 'posZ[mm]', 'RangeA[mm]',
                   'PowerA[dbm]', 'RangeB[mm]', 'PowerB[dbm]', 'RangeC[mm]',
                   'PowerC[dbm]', 'RangeD[mm]', 'PowerD[dbm]', 'RangeE[mm]',
                   'PowerE[dbm]', 'RangeF[mm]', 'PowerF[dbm]', 'AccX[g]',
                   'AccY[g]', 'AccZ[g]', 'GyroX[deg/sec]', 'GyroY[deg/sec]',
                   'GyroZ[deg/sec]', 'MagX[G]', 'MagY[G]', 'MagZ[G]',
-                  'Pressure[pascal]', 'Roll', 'Pitch', 'Heading',
-                  'Temperature[C]']
+                  'Roll', 'Pitch', 'Heading']
 
         writer.writerow(Start_Time)
         writer.writerow(" ")
@@ -328,7 +332,9 @@ if __name__ == "__main__":
         while True:
             try:
                 Sen = r.loop()
+                print(Sen)
                 if Sen is not None:
+                    # pass
                     writer.writerow(Sen)
                 else:
                     pass
