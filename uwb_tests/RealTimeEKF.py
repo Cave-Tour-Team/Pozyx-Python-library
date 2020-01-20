@@ -124,7 +124,7 @@ class PosRangeOrientation(object):
         P = sensor_data.pressure
         Temp = sensor_data.temperature
         gyro = sensor_data.angular_vel
-        
+
         if network_id is None:
             network_id = 0
         print("POS ID {}, x(mm): {pos.x} y(mm): {pos.y} z(mm): {pos.z}".format(
@@ -271,10 +271,13 @@ if __name__ == "__main__":
     if use_processing:
         osc_udp_client = SimpleUDPClient(ip, network_port)
     # necessary data for calibration, change the IDs and coordinates yourself
-    anchors = [DeviceCoordinates(0x617e, 1, Coordinates(394541.63780, 4990886.425448, 306.11862)),
-               DeviceCoordinates(0x6119, 1, Coordinates(394535.87380, 4990875.13956, 305.94624)),
-               DeviceCoordinates(0x6735, 1, Coordinates(394546.46551, 4990883.86831, 305.78802)),
-               DeviceCoordinates(0x6726, 1, Coordinates(394541.79053, 4990871.96470, 305.84900))  #,
+    false_x = 394500
+    false_y = 4990800
+    false_z = 300
+    anchors = [DeviceCoordinates(0x617e, 1, Coordinates(int((394541.63780-false_x)*1000), int((4990886.425448-false_y)*1000), int((306.11862-false_z)*1000)),
+               DeviceCoordinates(0x6119, 1, Coordinates(int((394535.87380-false_x)*1000), int((4990875.13956-false_y)*1000), int((305.94624-false_z)*1000)),
+               DeviceCoordinates(0x6735, 1, Coordinates(int((394546.46551-false_x)*1000), int((4990883.86831-false_y)*1000), int((305.78802-false_z)*1000)),
+               DeviceCoordinates(0x6726, 1, Coordinates(int((394541.79053-false_x)*1000), int((4990871.96470-false_y)*1000), int((305.84900-false_z)*1000))  #,
 
                # DeviceCoordinates(0x672d, 1, Coordinates()),
                # DeviceCoordinates(0x686a, 1, Coordinates()),
@@ -282,10 +285,10 @@ if __name__ == "__main__":
                # DeviceCoordinates(0x616c, 1, Coordinates()),
 
                # P9
-               # DeviceCoordinates(0x6840, 1, Coordinates(394554.71364, 4990875.21233, 303.81908)),
+               # DeviceCoordinates(0x6840, 1, Coordinates(int((394554.71364-false_x)*1000), int((4990875.21233-false_y)*1000), int((303.81908-false_z)*1000)),
 
                # P 10
-               # DeviceCoordinates(0x617c, 1, Coordinates(3994551.31736, 4990868.81968, 303.80426))
+               # DeviceCoordinates(0x617c, 1, Coordinates(int((3994551.31736-false_x)*1000), int((4990868.81968-false_y)*1000), int((303.80426-false_z)*1000))
 
                ]
 
