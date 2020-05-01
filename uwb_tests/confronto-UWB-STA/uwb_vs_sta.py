@@ -29,7 +29,8 @@ def hist(data, xlabel, title):
     plt.tight_layout()
     plt.grid(which='both')
     plt.legend()
-    plt.savefig(PL / (title + '.png'))
+    plt.savefig(PL / 'PNG' / (title + '.png'))
+    plt.savefig(PL / 'EPS' / (title + '.eps'))
 
 
 def trajectory(data, title, c):
@@ -47,7 +48,8 @@ def trajectory(data, title, c):
     plt.legend(['Total station', 'UWB tag'])
     plt.grid(which='both')
     plt.axis('square')
-    plt.savefig(PL / (title + str(c) + '.png'))
+    plt.savefig(PL / 'PNG' / (title + str(c) + '.png'))
+    plt.savefig(PL / 'EPS' / (title + str(c) + '.eps'))
 
 
 def error_vs_time(data, title):
@@ -60,7 +62,8 @@ def error_vs_time(data, title):
                linestyles='dashed')
     plt.legend(['2D positioning'])
     plt.grid(which='both')
-    plt.savefig(PL / (title + '.png'))
+    plt.savefig(PL / 'PNG' / (title + '.png'))
+    plt.savefig(PL / 'EPS' / (title + '.eps'))
 
 
 # Main code.
