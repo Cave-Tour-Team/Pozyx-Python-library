@@ -2,13 +2,15 @@
 """Plot data from csv."""
 import pandas as pd
 import matplotlib.pyplot as plt
+from pathlib import Path
 
-FILENAME = 'Pos_18-13-2020.01.20'
+P = Path(__file__).parent.absolute()
+FILENAME = P / "Pos_18-13-2020.01.20"
 
 
 def plot_path(df):
     """Plot X vs Y with anchor labels."""
-    fig, ax = plt.subplots(constrained_layout=True, figsize=(20, 20))
+    fig, ax = plt.subplots(constrained_layout=True, figsize=(10, 10))
     print(df.describe())
     ax.plot(df["posX[mm]"], df["posY[mm]"], marker='.')
     plt.xlabel('X (mm)')
@@ -51,7 +53,7 @@ def plot_path(df):
     plt.legend(["Tag position", "Anchors"])
     plt.grid(which='both')
     plt.title("Tag path")
-    plt.savefig(fname=FILENAME + '.pdf', format='pdf')
+    plt.savefig(fname=str(FILENAME) + '.pdf', format='pdf')
 
 
 def read_file(filename):
@@ -62,8 +64,8 @@ def read_file(filename):
 
 def main():
     """Plot data."""
-    df = read_file(FILENAME + '.csv')
-    plot_path(df)
+    df = read_file(str(FILENAME) + ".csv")
+    plot_path(df[5:])  # Discard the first 5 measurements
     plt.show()
 
 

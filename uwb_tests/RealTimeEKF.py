@@ -11,22 +11,17 @@ locally and remotely. Follow the steps to correctly set up your environment in
 the link, change the parameters and upload this sketch. Watch the coordinates
 change as you move your device around!
 """
-# from time import sleep
 from time import time
-# import math
 from pypozyx import *
 from pypozyx.definitions.bitmasks import POZYX_INT_MASK_IMU
 from pythonosc.osc_message_builder import OscMessageBuilder
 from pythonosc.udp_client import SimpleUDPClient
 import csv
 import datetime
-# import numpy as np
 from numpy import *
-# from numpy.linalg import inv, det
-# import pylab
-# import matplotlib.pyplot as plt
-# import serial
+from pathlib import Path
 
+P = Path(__file__).parent.absolute()
 # devices = []
 
 
@@ -308,7 +303,7 @@ if __name__ == "__main__":
     r = PosRangeOrientation(pozyx, osc_udp_client, anchors, algorithm,
                             ranging_protocol, dimension, height, remote_id)
     r.setup()
-    with open(dt.strftime('Pos_%H-%M-%Y.%m.%d.csv'), "w") as csv_file:
+    with open(P / dt.strftime('Pos_%H-%M-%Y.%m.%d.csv'), "w") as csv_file:
         writer = csv.writer(csv_file, delimiter=',')
 #       Start_Time = ['Start Time of session :', r.UTC_IT(chck=1)]
         Start_Time = ['Start Time of session :',
