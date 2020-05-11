@@ -69,7 +69,9 @@ class MyData:
 
     def plot_scatter(self, channels, field, title, ylab):
         """Get specific data."""
-        plt.figure(figsize=(16, 6))
+        plt.figure(constrained_layout=True, figsize=(10, 5))
+        style = ['^-', 'P-', 'p-', 'd-', 'o-', 's-']
+        cnt = 0
         for c in channels:
             x_distances = []
             y_list = []
@@ -82,14 +84,19 @@ class MyData:
             y_list = [y for _, y in sorted(zip(x_distances, y_list))]
             x_distances.sort()
             x_distances = [x/1000 for x in x_distances]
-            plt.plot(x_distances, y_list, '.-', linewidth=2)
+            plt.plot(x_distances, y_list, style[cnt], lw=1, ms=6)
+            cnt += 1
         plt.legend(["Channel 1", "Channel 2", "Channel 3", "Channel 4",
-                    "Channel 5", "Channel 7"], loc="best")
-        plt.xticks(x_distances, labels=x_distances)
-        plt.xlabel("Real distance [m]")
-        plt.ylabel(ylab)
-        plt.grid()
-        plt.title(title)
+                    "Channel 5", "Channel 7"], loc="best",
+                   fontsize='large')
+        plt.xticks(x_distances, labels=x_distances, rotation=90)
+        plt.xlabel("Real distance [m]", fontsize='large')
+        plt.ylabel(ylab, fontsize='large')
+        plt.grid(which='both')
+        plt.title(title, fontsize='large')
+        ax = plt.gca()
+        ax.tick_params(labelsize='x-large')
+        plt.savefig(P / (title + '.eps'), format='eps')
 
     def print_info(self):
         """Print info about database."""
@@ -111,7 +118,7 @@ def main():
     md.plot_scatter(channels=[1, 2, 3, 4, 5, 7], field="mm_err_mean",
                     title="Mean error", ylab="Mean error [m]")
     md.plot_scatter(channels=[1, 2, 3, 4, 5, 7], field="std",
-                    title="std", ylab="std")
+                    title="Standard Deviation", ylab="std")
     plt.show()
     print("--- END ---")
 
