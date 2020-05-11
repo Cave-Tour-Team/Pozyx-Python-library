@@ -4,10 +4,11 @@
 # import pandas as pd
 import json
 import numpy as np
-import datetime
+from pathlib import Path
 
-FILENAME = "tests.json"
-BACKUP_FILENAME = "tests_bak.json"
+P = Path(__file__).parent.absolute()
+FILENAME = P / "tests.json"
+BACKUP_FILENAME = P / "tests_bak.json"
 
 
 class DataBase:
@@ -21,7 +22,6 @@ class DataBase:
                 # print(self.data)
             with open(BACKUP_FILENAME, "w") as f:
                 json.dump(self.data, f, ensure_ascii=False)
-
 
         except Exception:
             with open(FILENAME, "w") as f:

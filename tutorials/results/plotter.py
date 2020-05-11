@@ -4,8 +4,10 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 
-FILENAME = "tests_3.json"
+P = Path(__file__).parent.absolute()
+FILENAME = P / "tests_3.json"
 STD_FACTOR = 3
 HOW_MANY = 19
 
